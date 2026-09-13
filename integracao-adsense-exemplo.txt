@@ -1,0 +1,28 @@
+MODELO INATIVO — não é um anúncio funcional e não é carregado pelo site.
+
+Use o código fornecido pela sua conta AdSense. Não publique os marcadores abaixo.
+Não há ID de publicador, aprovação ou consentimento configurado neste pacote.
+
+1. Verificação opcional no <head>, se esse método for oferecido pelo Google:
+<meta name="google-adsense-account" content="SEU_CA_PUB_REAL">
+
+2. Após aprovação e configuração de privacidade/consentimento:
+O código oficial da sua conta normalmente inclui o carregador async de adsbygoogle.js,
+um elemento ins com data-ad-client e data-ad-slot reais e a chamada adsbygoogle.push.
+Copie o bloco atualizado do painel; não substitua sua implementação de consentimento
+por um simples botão visual. Carregue o script somente no momento permitido.
+
+3. Exemplo de posição editorial para o bloco fornecido pelo Google:
+<aside aria-label="Publicidade" class="publicidade">
+  <p>Publicidade</p>
+  <!-- COLE A UNIDADE REAL E CONFIGURADA AQUI -->
+</aside>
+
+CSS sugerido após integração:
+.publicidade { margin: 40px 0; min-height: 280px; text-align: center; }
+.publicidade > p { font: 12px system-ui; color: #64685f; }
+
+4. ads.txt: use a linha exata indicada na sua conta e publique na raiz do host.
+Não há ads.txt fictício neste projeto.
+
+Leia GUIA-SEO-E-MONETIZACAO.md antes da ativação.
