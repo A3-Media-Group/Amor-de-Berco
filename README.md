@@ -1,2 +1,2 @@
-# Amor-de-Ber-o
+# Amor-de-Berco
 GPT
