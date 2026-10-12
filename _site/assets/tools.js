@@ -180,3 +180,141 @@ if(tool==='nomes-bebe'&&window.NOMES){
   document.querySelector('#name-random').addEventListener('click',()=>{const list=filter();if(!list.length)return render();render(list[Math.floor(Math.random()*list.length)].n);});
   render();
 }
+
+// ---------- Bebê mês a mês ----------
+if(tool==='bebe-mes-a-mes'&&window.MONTHS){
+  inputDate.max=todayValue();
+  onSubmit(()=>{const birth=parseDate(inputDate.value);const t=today();if(birth>t)throw Error('A data de nascimento não pode estar no futuro.');const a=ageParts(birth,t);if(a.months>=25)throw Error('O conteúdo mês a mês vai até 24 meses. Veja os artigos sobre parentalidade para as próximas fases.');
+    const m=Math.min(24,Math.max(1,a.months+1));const d=window.MONTHS[m-1];
+    showResult(ageText(a),[a.months<1?'O bebê está no primeiro mês de vida.':`O bebê está vivendo o ${m}º mês.`,'Para prematuros, considere a idade corrigida ao avaliar o desenvolvimento.']);
+    document.querySelector('#month-card').replaceChildren(el('div',{class:'size-card'},el('span',{class:'size-emoji','aria-hidden':'true',text:d.e}),el('div',{},el('span',{class:'label',text:'Bebê mês a mês'}),el('strong',{text:`${m} ${m>1?'meses':'mês'}`}))),el('p',{text:d.d}),el('a',{class:'button',href:`../bebe/${d.s}.html`,text:`Ler tudo sobre ${m} ${m>1?'meses':'mês'} ↗`}));});
+}
+
+// ---------- Curva de crescimento (OMS) ----------
+function normCdf(z){const t=1/(1+.2316419*Math.abs(z));const d=.3989423*Math.exp(-z*z/2);const p=d*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p;}
+function lmsAt(key,day){const t=window.OMS[key];let i=t.findIndex(r=>r[0]>=day);if(i<0)i=t.length-1;if(i===0||t[i][0]===day)return t[i].slice(1);const a=t[i-1],b=t[i],f=(day-a[0])/(b[0]-a[0]);return [1,2,3].map(k=>a[k]+(b[k]-a[k])*f);}
+function zScore(x,[L,M,S]){return L===0?Math.log(x/M)/S:(Math.pow(x/M,L)-1)/(L*S);}
+function fromZ(z,[L,M,S]){return L===0?M*Math.exp(S*z):M*Math.pow(1+L*S*z,1/L);}
+if(tool==='curva-crescimento'&&window.OMS){
+  const KEY='amor-berco-crescimento-v1';const IND={peso:['Peso','kg','#weight'],comprimento:['Comprimento/altura','cm','#length'],cabeca:['Perímetro cefálico','cm','#head']};
+  let saved=store(KEY)||null;let current='peso';
+  const md=document.querySelector('#measure-date');md.value=todayValue();md.max=todayValue();inputDate.max=todayValue();
+  if(saved&&saved.birth){inputDate.value=saved.birth;document.querySelector('#sex').value=saved.sex;}
+  const n=(x,d=1)=>x.toLocaleString('pt-BR',{maximumFractionDigits:d,minimumFractionDigits:d});
+  function read(){const birth=parseDate(inputDate.value),when=parseDate(md.value);if(when<birth)throw Error('A data da medida deve ser posterior ao nascimento.');if(when>today())throw Error('A data da medida não pode estar no futuro.');const day=Math.round((when-birth)/DAY);if(day>1856)throw Error('As curvas da OMS desta ferramenta vão de 0 a 5 anos.');const vals={};for(const[k,[, ,sel]]of Object.entries(IND)){const v=document.querySelector(sel).value;if(v)vals[k]=Number(v);}if(!Object.keys(vals).length)throw Error('Informe ao menos uma medida.');return {birth,day,date:md.value,sex:document.querySelector('#sex').value,vals};}
+  function describe(p){return p<3?'abaixo do percentil 3: converse com o pediatra':p>97?'acima do percentil 97: converse com o pediatra':p<15?'entre os percentis 3 e 15':p>85?'entre os percentis 85 e 97':'faixa central, entre os percentis 15 e 85';}
+  function chart(){const box=document.querySelector('#growth-chart');if(!inputDate.value){box.replaceChildren();return;}const sex=document.querySelector('#sex').value,key=`${current}-${sex}`;const rows=(saved&&saved.rows||[]).filter(r=>r.vals[current]!=null);const birth=parseDate(inputDate.value);
+    const maxDay=Math.min(1856,Math.max(365,...rows.map(r=>Math.round((parseDate(r.date)-birth)/DAY)+90)));const W=640,H=320,pad=40;const days=[];for(let d=0;d<=maxDay;d+=7)days.push(d);
+    const curves=[-1.881,-1.036,0,1.036,1.881].map(z=>days.map(d=>[d,fromZ(z,lmsAt(key,d))]));const ys=curves.flat().map(p=>p[1]).concat(rows.map(r=>r.vals[current]));const ymin=Math.floor(Math.min(...ys)),ymax=Math.ceil(Math.max(...ys));
+    const X=d=>pad+(W-pad*1.5)*d/maxDay,Y=v=>H-pad-(H-pad*1.6)*(v-ymin)/(ymax-ymin||1);const NS='http://www.w3.org/2000/svg';const svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('class','growth-svg');svg.setAttribute('role','img');svg.setAttribute('aria-label',`Gráfico de ${IND[current][0]} com as curvas de percentil 3, 15, 50, 85 e 97 da OMS`);
+    const add=(tag,attrs,text)=>{const e=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attrs))e.setAttribute(k,v);if(text)e.textContent=text;svg.append(e);return e;};
+    for(let i=0;i<=4;i++){const v=ymin+(ymax-ymin)*i/4;add('line',{x1:pad,x2:W-pad/2,y1:Y(v),y2:Y(v),class:'grid'});add('text',{x:4,y:Y(v)+4,class:'axis'},n(v,0));}
+    const step=maxDay>730?365:maxDay>365?182:61;for(let d=0;d<=maxDay;d+=step){add('text',{x:X(d),y:H-pad+18,class:'axis','text-anchor':'middle'},d===0?'0':d%365===0?`${d/365}a`:`${Math.round(d/30.4375)}m`);}
+    ['P3','P15','P50','P85','P97'].forEach((l,i)=>{add('path',{d:curves[i].map((p,j)=>`${j?'L':'M'}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join(''),class:i===2?'p50':'pline'});const last=curves[i][curves[i].length-1];add('text',{x:X(last[0])-2,y:Y(last[1])-4,class:'axis','text-anchor':'end'},l);});
+    rows.forEach(r=>{const d=Math.round((parseDate(r.date)-birth)/DAY);add('circle',{cx:X(d),cy:Y(r.vals[current]),r:5,class:'pt'});});
+    const tabs=el('div',{class:'segmented chart-tabs'});for(const[k,[label]]of Object.entries(IND)){const b=el('button',{type:'button',class:k===current?'on':'',text:label});b.addEventListener('click',()=>{current=k;chart();});tabs.append(b);}
+    box.replaceChildren(el('h3',{text:`${IND[current][0]} (${IND[current][1]}) — curvas da OMS`}),tabs,svg,el('p',{class:'small',text:rows.length?'Pontos: medidas salvas neste aparelho.':'Salve medidas para vê-las no gráfico.'}));}
+  function history(){const box=document.querySelector('#growth-history');const rows=saved&&saved.rows||[];if(!rows.length){box.replaceChildren();return;}const tb=el('tbody');rows.forEach((r,i)=>{const del=el('button',{type:'button',class:'link-button',text:'apagar'});del.addEventListener('click',()=>{saved.rows.splice(i,1);store(KEY,saved.rows.length?saved:null);if(!saved.rows.length)saved=null;history();chart();});tb.append(el('tr',{},el('td',{text:shortDate(parseDate(r.date))}),el('td',{text:r.vals.peso!=null?`${n(r.vals.peso,2)} kg`:'—'}),el('td',{text:r.vals.comprimento!=null?`${n(r.vals.comprimento)} cm`:'—'}),el('td',{text:r.vals.cabeca!=null?`${n(r.vals.cabeca)} cm`:'—'}),el('td',{},del)));});box.replaceChildren(el('h3',{text:'Medidas salvas'}),el('div',{class:'table-scroll'},el('table',{},el('thead',{},el('tr',{},el('th',{text:'Data'}),el('th',{text:'Peso'}),el('th',{text:'Comprimento'}),el('th',{text:'Perímetro cefálico'}),el('th',{text:''}))),tb)));}
+  onSubmit(()=>{const r=read();const lines=[];let first=null;for(const[k,v]of Object.entries(r.vals)){const z=zScore(v,lmsAt(`${k}-${r.sex}`,r.day));if(!Number.isFinite(z)||Math.abs(z)>6)throw Error(`Confira o valor de ${IND[k][0].toLowerCase()}: ele está muito fora das curvas.`);const p=normCdf(z)*100;const txt=`${IND[k][0]}: percentil ${p<1?'< 1':p>99?'> 99':n(p,0)} (escore-z ${z>=0?'+':''}${n(z,2)}) — ${describe(p)}.`;lines.push(txt);if(!first)first=`Percentil ${p<1?'< 1':p>99?'> 99':n(p,0)} de ${IND[k][0].toLowerCase()}`;}
+    lines.push(`Idade na medida: ${ageText(ageParts(r.birth,parseDate(r.date)))}. Curvas da OMS para ${r.sex==='f'?'meninas':'meninos'}.`);showResult(first,lines);chart();});
+  document.querySelector('#save-measure').addEventListener('click',()=>{try{const r=read();if(saved&&(saved.birth!==inputDate.value||saved.sex!==r.sex)){if(!confirm('A data de nascimento ou o sexo mudaram. Apagar as medidas anteriores e começar um novo histórico?'))return;saved=null;}saved=saved||{birth:inputDate.value,sex:r.sex,rows:[]};saved.rows=saved.rows.filter(x=>x.date!==r.date).concat([{date:r.date,vals:r.vals}]).sort((a,b)=>a.date.localeCompare(b.date));store(KEY,saved);form.requestSubmit();history();}catch(err){showResult('Confira os dados',err.message);}});
+  document.querySelector('#sex').addEventListener('change',chart);inputDate.addEventListener('change',chart);history();chart();
+}
+
+// ---------- Beta hCG ----------
+if(tool==='calculadora-beta-hcg'){
+  const RANGES=[['3 semanas',5,50],['4 semanas',5,426],['5 semanas',18,7340],['6 semanas',1080,56500],['7 a 8 semanas',7650,229000],['9 a 12 semanas',25700,288000],['13 a 16 semanas',13300,254000],['17 a 24 semanas',4060,165400],['25 a 40 semanas',3640,117000]];
+  const n=x=>x.toLocaleString('pt-BR',{maximumFractionDigits:1});
+  onSubmit(()=>{const v1=Number(document.querySelector('#hcg1').value);if(!(v1>=0))throw Error('Informe o valor do beta hCG em mUI/mL.');const v2raw=document.querySelector('#hcg2').value,hours=Number(document.querySelector('#hours').value);
+    const status=v1<5?'Resultado geralmente considerado negativo':v1<=25?'Resultado indeterminado':'Resultado geralmente considerado positivo';const lines=[v1<5?'Valores abaixo de 5 mUI/mL costumam indicar ausência de gravidez. Se a menstruação não vier, repita o exame.':v1<=25?'Entre 5 e 25 mUI/mL, os laboratórios costumam orientar repetir o exame em 48 a 72 horas.':'Confirme com a sua equipe e inicie o pré-natal.'];
+    const weeks=RANGES.filter(r=>v1>=r[1]&&v1<=r[2]).map(r=>r[0]);if(v1>=5)lines.push(weeks.length?`Faixas de referência compatíveis: ${weeks.join(', ')}. As faixas se sobrepõem; só o ultrassom define a idade gestacional.`:'O valor está fora das faixas de referência mais citadas. Converse com a equipe.');
+    if(v2raw){const v2=Number(v2raw);if(!(v2>0)||!(v1>0))throw Error('Para comparar, os dois valores precisam ser maiores que zero.');if(!(hours>=12&&hours<=168))throw Error('Informe as horas entre os exames, entre 12 e 168.');
+      if(v2>v1){const dbl=hours*Math.LN2/Math.log(v2/v1);const rise=(Math.pow(v2/v1,48/hours)-1)*100;const min=v1<1500?49:v1<3000?40:33;lines.push(`Tempo de duplicação: cerca de ${n(dbl)} horas. Aumento equivalente em 48 horas: ${n(rise)}%.`);lines.push(rise>=min?`O aumento está acima do mínimo descrito em estudos para gestações iniciais com esse valor de partida (${min}% em 48 h).`:`O aumento está abaixo do mínimo descrito em estudos (${min}% em 48 h). Isso precisa de avaliação médica, mas não é diagnóstico isoladamente.`);}
+      else lines.push(v2===v1?'O valor ficou estável. Converse com a equipe de saúde.':'O valor diminuiu entre os exames. Procure avaliação médica.');}
+    showResult(status,lines);
+    const tb=el('tbody');RANGES.forEach(r=>tb.append(el('tr',{class:v1>=r[1]&&v1<=r[2]?'current':''},el('td',{text:r[0]}),el('td',{text:`${r[1].toLocaleString('pt-BR')} a ${r[2].toLocaleString('pt-BR')}`}))));
+    document.querySelector('#hcg-detail').replaceChildren(el('h3',{text:'Faixas de referência (mUI/mL)'}),el('div',{class:'table-scroll'},el('table',{},el('thead',{},el('tr',{},el('th',{text:'Semanas desde a última menstruação'}),el('th',{text:'Faixa aproximada'}))),tb)),el('p',{class:'small',text:'Fonte das faixas: American Pregnancy Association. Seu laboratório pode usar referências diferentes.'}));});
+}
+
+// ---------- Sexo do bebê ----------
+if(tool==='sexo-do-bebe'){
+  const label=document.querySelector('#date-label');const setBase=()=>{const b=form.base.value;label.firstChild.textContent=b==='dpp'?'Data provável do parto (DPP)':'Primeiro dia da última menstruação';if(b==='dpp')inputDate.removeAttribute('max');else inputDate.max=todayValue();};form.querySelectorAll('[name=base]').forEach(r=>r.addEventListener('change',setBase));setBase();
+  onSubmit(()=>{const date=parseDate(inputDate.value);const t=today();const dum=form.base.value==='dpp'?date-280*DAY:date;if(form.base.value==='dum'&&date>t)throw Error('A última menstruação não pode estar no futuro.');const days=Math.round((t-dum)/DAY);if(days>300)throw Error('As datas indicam mais de 42 semanas. Confira as informações.');
+    const items=[[8*7,null,'Sexagem fetal (exame de sangue da gestante)'],[12*7,13*7+6,'Ultrassom do fim do 1º trimestre: pode sugerir, com margem de erro'],[16*7,null,'Ultrassom: visualização mais segura a partir daqui'],[20*7,24*7,'Ultrassom morfológico do 2º trimestre: geralmente confirma']];
+    const sexagem=dum+56*DAY;showResult(sexagem<=t?'Você já pode fazer a sexagem fetal':`Sexagem fetal a partir de ${dateText(sexagem)}`,[days>=0?`Hoje: ${gaText(Math.max(0,days))} de gestação.`:'','Confirme com o laboratório o prazo exato e o preparo do exame.']);
+    const list=el('ol',{class:'timeline'});items.forEach(([a,b,l])=>{const s=dum+a*DAY,e=b?dum+b*DAY:null;const past=(e||s)<t;list.append(el('li',{class:past?'past':''},el('strong',{text:e?`${shortDate(s)} a ${shortDate(e)}`:`A partir de ${shortDate(s)}`}),el('span',{text:` ${l}${past?' (já é possível)':''}`})));});
+    document.querySelector('#sex-timeline').replaceChildren(el('h3',{text:'Quando cada exame pode mostrar o sexo'}),list,el('p',{class:'small',text:'Tabela chinesa e simpatias não têm comprovação científica.'}));});
+}
+
+// ---------- Contador de movimentos ----------
+if(tool==='contador-chutes'){
+  const KEY='amor-berco-chutes-v1';let rows=(store(KEY)||[]).filter(r=>r&&Number.isFinite(r.start)&&Number.isFinite(r.end));let session=null,tick=null;
+  const btn=document.querySelector('#kick-button'),stop=document.querySelector('#kick-stop'),count=document.querySelector('#kick-count'),state=document.querySelector('#kick-state');
+  function finish(){if(!session)return;rows.push({start:session.start,end:Date.now(),count:session.count});rows=rows.slice(-100);store(KEY,rows);clearInterval(tick);const r=rows[rows.length-1];state.textContent=r.count>=10?`10 movimentos em ${mmss(r.end-r.start)}. Sessão salva.`:`Sessão encerrada com ${r.count} movimentos em ${mmss(r.end-r.start)}.`;session=null;btn.textContent='Começar contagem';stop.hidden=true;render();}
+  function render(){const tb=document.querySelector('#kick-log');tb.replaceChildren();if(!rows.length)tb.append(el('tr',{},el('td',{colspan:'3',text:'Suas sessões aparecerão aqui.'})));[...rows].reverse().slice(0,30).forEach(r=>tb.append(el('tr',{},el('td',{text:new Date(r.start).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}),el('td',{text:String(r.count)}),el('td',{text:mmss(r.end-r.start)}))));
+    const full=rows.filter(r=>r.count>=10).slice(-7);const box=document.querySelector('#kick-stats');if(!full.length){box.replaceChildren();return;}const avg=full.reduce((s,r)=>s+(r.end-r.start),0)/full.length;const last=full[full.length-1];box.replaceChildren(el('div',{},el('span',{class:'label',text:'Última sessão'}),el('strong',{text:mmss(last.end-last.start)}),el('small',{text:'até 10 movimentos'})),el('div',{},el('span',{class:'label',text:'Média recente'}),el('strong',{text:mmss(avg)}),el('small',{text:`${full.length} sessões completas`})),el('div',{},el('span',{class:'label',text:'Comparação'}),el('strong',{text:(last.end-last.start)>avg*1.5&&full.length>2?'Mais lenta':'Dentro do padrão'}),el('small',{text:'em relação à média'})));}
+  btn.addEventListener('click',()=>{if(!session){session={start:Date.now(),count:0};count.textContent='0';btn.textContent='Senti um movimento';stop.hidden=false;state.textContent='Contando. Toque a cada movimento.';tick=setInterval(()=>{state.textContent=`Contando há ${mmss(Date.now()-session.start)}. Toque a cada movimento.`;},1000);return;}session.count++;count.textContent=String(session.count);if(session.count>=10)finish();});
+  stop.addEventListener('click',finish);
+  document.querySelector('#kick-clear').addEventListener('click',()=>{if(rows.length&&!confirm('Apagar todo o histórico de movimentos?'))return;rows=[];store(KEY,null);render();});
+  render();
+}
+
+// ---------- Licença-maternidade ----------
+if(tool==='licenca-maternidade'){
+  const MIN=1621,TETO=8475.55;const money=x=>x.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const worker=document.querySelector('#worker'),salaryLabel=document.querySelector('#salary-label');const sync=()=>{salaryLabel.firstChild.textContent=worker.value==='mei'?'Valor sobre o qual você contribui por mês (R$; em geral, o salário mínimo)':worker.value==='individual'?'Média das contribuições dos últimos 12 meses (R$)':'Salário mensal bruto (R$; se variável, média dos últimos 6 meses)';if(worker.value==='mei'&&!document.querySelector('#salary').value)document.querySelector('#salary').value=MIN;};worker.addEventListener('change',sync);sync();
+  onSubmit(()=>{const start=parseDate(inputDate.value);const days=Number(document.querySelector('#leave-days').value);const end=start+(days-1)*DAY;const vac=document.querySelector('#vacation').checked;const back=end+DAY+(vac?30*DAY:0);const stability=addMonths(start,5);
+    const lines=[`Licença de ${days} dias: de ${dateText(start)} a ${dateText(end)}.`,vac?`Com 30 dias de férias emendados, retorno em ${dateText(back)}.`:'',`Estabilidade no emprego (CLT e doméstica): até ${dateText(stability)}, considerando que a licença começou no parto.`];
+    const sal=Number(document.querySelector('#salary').value);if(sal>0){let monthly;if(worker.value==='clt')monthly=sal;else if(worker.value==='mei')monthly=Math.max(MIN,Math.min(sal,TETO));else monthly=Math.max(MIN,Math.min(sal,TETO));const total=monthly*days/30;
+      lines.push(`Salário-maternidade estimado: ${money(monthly)} por mês, cerca de ${money(total)} no total.`,worker.value==='clt'?'Pago pela empresa junto com a folha (a empresa compensa com o INSS).':`Pago pelo INSS. Valor limitado ao teto de ${money(TETO)} e não inferior ao salário mínimo. Exige carência, em regra de 10 contribuições para MEI, autônomas e facultativas.`);}
+    showResult(`Volta ao trabalho: ${dateText(back)}`,lines);
+    const list=el('ol',{class:'timeline'});[[start,'Início da licença'],[end,'Último dia de licença'],[vac?end+30*DAY:null,'Último dia de férias'],[back,'Retorno ao trabalho'],[addMonths(start,6),'Bebê completa 6 meses: fim do direito às pausas para amamentar'],[stability,'Fim da estabilidade (5 meses após o parto)']].filter(x=>x[0]).sort((a,b)=>a[0]-b[0]).forEach(([d,l])=>list.append(el('li',{},el('strong',{text:shortDate(d)}),el('span',{text:` ${l}`}))));
+    document.querySelector('#leave-detail').replaceChildren(el('h3',{text:'Datas importantes'}),list,el('p',{class:'small',text:'Estimativa sem valor oficial. Confirme com o RH, o sindicato ou no Meu INSS (telefone 135).'}));});
+}
+
+// ---------- Plano de parto ----------
+if(tool==='plano-de-parto'){
+  const KEY='amor-berco-plano-parto-v1';const SECTIONS=[['Ambiente',['Luz baixa e ambiente tranquilo','Usar minha própria música','Liberdade para caminhar e mudar de posição','Beber líquidos e comer algo leve, se liberado']],['Alívio da dor',['Métodos sem remédios: banho morno, bola, massagem','Analgesia (peridural/raqui) se eu solicitar','Prefiro evitar analgesia, se possível','Decidir sobre analgesia no momento']],['Intervenções',['Ser consultada e informada antes de qualquer procedimento','Evitar ocitocina de rotina','Evitar episiotomia de rotina','Evitar ruptura artificial da bolsa de rotina','Exames de toque apenas quando necessários']],['Parto',['Escolher a posição para o parto','Acompanhante cortar o cordão umbilical','Fotos ou vídeo do nascimento, se permitido']],['Cuidados com o bebê',['Contato pele a pele imediato','Clampeamento oportuno do cordão','Amamentar na primeira hora','Exames e procedimentos do bebê na minha presença','Alojamento conjunto']],['Se for necessária uma cesárea',['Acompanhante presente na sala','Pele a pele na sala, se possível','Abaixar o campo para ver o nascimento','Amamentar ainda na sala de recuperação']],['Amamentação',['Não oferecer bico, chupeta ou fórmula sem indicação e sem me consultar','Apoio para a pega nas primeiras mamadas']]];
+  const holder=document.querySelector('#bp-sections');const saved=store(KEY)||{};const checked=new Set(Array.isArray(saved.checked)?saved.checked:[]);
+  SECTIONS.forEach(([title,items],si)=>{const fs=el('fieldset',{class:'check-group'},el('legend',{text:title}));items.forEach((t,ii)=>{const id=`${si}-${ii}`;const i=el('input',{type:'checkbox',value:id});i.checked=checked.has(id);fs.append(el('label',{class:'check-row'},i,el('span',{text:t})));});holder.append(fs);});
+  const fields=['#bp-name','#bp-companion','#bp-hospital','#bp-notes'];fields.forEach(f=>{const e=document.querySelector(f);if(typeof saved[f]==='string')e.value=saved[f];});
+  const save=()=>{const data={checked:[...holder.querySelectorAll('input:checked')].map(i=>i.value)};fields.forEach(f=>data[f]=document.querySelector(f).value);store(KEY,data);};
+  document.querySelector('#birth-plan').addEventListener('input',save);document.querySelector('#birth-plan').addEventListener('change',save);
+  document.querySelector('#bp-preview').addEventListener('click',()=>{const out=document.querySelector('#bp-output');const v=f=>document.querySelector(f).value.trim();out.replaceChildren(el('h2',{text:`Plano de parto${v('#bp-name')?` de ${v('#bp-name')}`:''}`}),el('p',{text:[v('#bp-companion')?`Acompanhante: ${v('#bp-companion')}`:'',v('#bp-hospital')?`Maternidade: ${v('#bp-hospital')}`:''].filter(Boolean).join(' · ')}),el('p',{class:'small',text:'Estas são minhas preferências. Sei que situações clínicas podem exigir mudanças e peço que elas sejam explicadas e discutidas comigo.'}));
+    SECTIONS.forEach(([title,items],si)=>{const sel=items.filter((t,ii)=>holder.querySelector(`input[value="${si}-${ii}"]`).checked);if(sel.length)out.append(el('h3',{text:title}),el('ul',{},...sel.map(t=>el('li',{text:t}))));});
+    if(v('#bp-notes'))out.append(el('h3',{text:'Observações'}),el('p',{text:v('#bp-notes')}));const pr=el('button',{type:'button',class:'button',text:'Imprimir plano'});pr.addEventListener('click',()=>window.print());out.append(el('div',{class:'actions'},pr));out.scrollIntoView({behavior:'smooth'});});
+  document.querySelector('#bp-clear').addEventListener('click',()=>{if(!confirm('Limpar todas as respostas do plano de parto?'))return;holder.querySelectorAll('input').forEach(i=>i.checked=false);fields.forEach(f=>document.querySelector(f).value='');store(KEY,null);document.querySelector('#bp-output').replaceChildren();});
+}
+
+// ---------- Rotina de sono ----------
+if(tool==='rotina-sono-bebe'){
+  const PLANS=[[3,4,[75,90,105,105,120],[60,60,45,30]],[5,6,[120,135,150,165],[75,75,40]],[7,8,[150,180,210],[90,75]],[9,12,[180,210,240],[75,75]],[13,17,[300,300],[120]],[18,36,[330,330],[120]]];
+  const hm=min=>{const m=((min%1440)+1440)%1440;return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;};
+  onSubmit(()=>{const age=Number(document.querySelector('#age-months').value);const [h,mi]=document.querySelector('#wake').value.split(':').map(Number);if(!Number.isInteger(age)||age<0||age>36)throw Error('Informe a idade em meses, de 0 a 36.');if(!Number.isFinite(h))throw Error('Informe o horário de acordar.');
+    const total=age<=3?'14 a 17 horas':age<=12?'12 a 16 horas':age<=24?'11 a 14 horas':'10 a 13 horas';const box=document.querySelector('#sleep-plan');
+    if(age<3){showResult(`Sono total recomendado: ${total}`,['Até cerca de 3 meses, o bebê não tem rotina: dorme e mama em livre demanda.','Janelas acordado costumam ser curtas, de 45 a 90 minutos. Observe sinais de sono.']);box.replaceChildren();return;}
+    const plan=PLANS.find(p=>age>=p[0]&&age<=p[1]);let t=h*60+mi;const rows=[[t,'Acorda']];let day=0;plan[3].forEach((len,i)=>{t+=plan[2][i];rows.push([t,`Soneca ${i+1} (cerca de ${len} min)`]);t+=len;day+=len;rows.push([t,'Acorda da soneca']);});t+=plan[2][plan[3].length];rows.push([t,'Hora de dormir (iniciar o ritual de sono um pouco antes)']);
+    const night=(h*60+mi+1440-t)%1440;showResult(`Sono total recomendado: ${total}`,[`${plan[3].length} soneca${plan[3].length>1?'s':''} somando cerca de ${(day/60).toLocaleString('pt-BR',{maximumFractionDigits:1})} h e noite de aproximadamente ${(night/60).toLocaleString('pt-BR',{maximumFractionDigits:1})} h até ${hm(h*60+mi)}.`,'Rotina de referência: ajuste aos sinais de sono e à rotina da família.']);
+    const list=el('ol',{class:'timeline'});rows.forEach(([m,l])=>list.append(el('li',{},el('strong',{text:hm(m)}),el('span',{text:` ${l}`}))));box.replaceChildren(el('h3',{text:'Rotina sugerida'}),list);});
+}
+
+// ---------- Custo do bebê ----------
+if(tool==='custo-bebe'){
+  const FIELDS=[['enxoval','Enxoval inicial (berço, carrinho, bebê-conforto, roupas)',3500,'once'],['fraldas','Fraldas por mês',250,'m'],['higiene','Higiene e farmácia por mês',80,'m'],['formula','Fórmula infantil por mês (0 se amamenta)',0,'m'],['comida','Alimentação a partir dos 6 meses, por mês',200,'m6'],['roupas','Roupas e calçados por mês',100,'m'],['saude','Plano de saúde e consultas por mês (0 se usa o SUS)',0,'m'],['creche','Creche ou cuidadora por mês',0,'m'],['outros','Outros (brinquedos, passeios, extras) por mês',100,'m']];
+  const box=document.querySelector('#cost-fields');FIELDS.forEach(([id,label,def])=>box.append(el('label',{class:'field'},label,el('input',{type:'number',id:`c-${id}`,min:'0',step:'1',value:String(def),inputmode:'decimal'}))));
+  const money=x=>x.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+  onSubmit(()=>{const parts=FIELDS.map(([id,label,,k])=>{const v=Number(document.querySelector(`#c-${id}`).value)||0;if(v<0)throw Error('Use apenas valores positivos.');return [label.replace(/ por mês.*| \(.*/,''),k==='once'?v:k==='m6'?v*6:v*12];});const total=parts.reduce((s,p)=>s+p[1],0);
+    showResult(`${money(total)} no primeiro ano`,[`Média de ${money(total/12)} por mês, incluindo o enxoval inicial.`,'Estimativa com os valores informados.']);
+    const max=Math.max(...parts.map(p=>p[1]),1);document.querySelector('#cost-detail').replaceChildren(el('h3',{text:'Por categoria (12 meses)'}),el('div',{class:'bars'},...parts.filter(p=>p[1]>0).sort((a,b)=>b[1]-a[1]).map(([l,v])=>el('div',{class:'bar-row'},el('span',{text:l}),el('div',{class:'bar'},el('i',{style:`width:${Math.max(2,v/max*100)}%`})),el('strong',{text:money(v)})))));});
+  form.requestSubmit();
+}
+
+// ---------- Chá de fraldas ----------
+if(tool==='cha-de-fraldas'){
+  const SIZES=[['RN','até cerca de 4 kg',.10],['P','cerca de 3 a 6 kg',.25],['M','cerca de 6 a 10 kg',.35],['G','cerca de 9 a 13 kg',.30]];
+  onSubmit(()=>{const g=Number(document.querySelector('#guests').value),p=Number(document.querySelector('#packs').value),per=Number(document.querySelector('#per-pack').value);if(!Number.isInteger(g)||g<1||!Number.isInteger(p)||p<1||!(per>=10))throw Error('Confira o número de convidados, pacotes e fraldas por pacote.');
+    const total=g*p;let given=0;const split=SIZES.map(([s,w,f],i)=>{const n=i===SIZES.length-1?total-given:Math.round(total*f);given+=n;return [s,w,n];});const diapers=total*per;
+    showResult(`${total} pacotes · cerca de ${diapers.toLocaleString('pt-BR')} fraldas`,[`Cobrem aproximadamente ${Math.round(diapers/7)} dias, considerando uma média de 7 trocas por dia.`,'Faixas de peso variam entre marcas: confira na embalagem.']);
+    const tb=el('tbody');split.forEach(([s,w,n])=>tb.append(el('tr',{},el('td',{text:s}),el('td',{text:w}),el('td',{text:`${n} pacote${n===1?'':'s'}`}),el('td',{text:`${Math.ceil(n/p)} convidado${Math.ceil(n/p)===1?'':'s'}`}))));
+    document.querySelector('#diaper-detail').replaceChildren(el('h3',{text:'Divisão sugerida'}),el('div',{class:'table-scroll'},el('table',{},el('thead',{},el('tr',{},el('th',{text:'Tamanho'}),el('th',{text:'Peso do bebê'}),el('th',{text:'Pacotes'}),el('th',{text:'Convidados'}))),tb)),el('p',{class:'small',text:'Dica: escreva o tamanho no convite de cada convidado para garantir a divisão.'}));});
+}

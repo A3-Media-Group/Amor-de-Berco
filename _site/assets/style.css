@@ -28,3 +28,13 @@
 .footer-grid-4{grid-template-columns:1.6fr 1fr 1fr 1fr}
 @media(max-width:700px){.size-emoji{font-size:44px}.field-row{grid-template-columns:1fr}.stats strong{font-size:24px}.log-buttons{grid-template-columns:repeat(2,1fr)}.names{grid-template-columns:1fr}.footer-grid-4{grid-template-columns:1fr 1fr}.week-grid{grid-template-columns:repeat(2,1fr)}.cta-box strong{font-size:22px}}
 @media print{.cta-box,.related,.week-chips,.week-nav,.add-item,.log-buttons,.link-button,.fav,figcaption{display:none!important}}
+.inline-details{border:0;padding:0 0 10px}.inline-details summary{font-size:14px;margin-bottom:12px}
+.growth-svg{width:100%;height:auto;background:white;border:1px solid var(--line);border-radius:8px;margin:10px 0}.growth-svg .grid{stroke:#e4e6de}.growth-svg .axis{font-size:11px;fill:var(--muted)}.growth-svg .pline{fill:none;stroke:#a9b8a3;stroke-width:1.4}.growth-svg .p50{fill:none;stroke:var(--green);stroke-width:2.2}.growth-svg .pt{fill:#9a5b3c;stroke:white;stroke-width:2}
+.chart-tabs button{border:1px solid #b7bcae;border-radius:30px;background:var(--cream);padding:8px 14px;font-size:14px}.chart-tabs button.on{background:var(--sage);border-color:var(--green)}
+.kick-counter{text-align:center}.kick-counter .timer{font-size:72px;margin:6px 0}.kick-counter .button{margin-top:10px}
+.bars{display:grid;gap:10px;margin:12px 0}.bar-row{display:grid;grid-template-columns:1.3fr 2fr auto;gap:10px;align-items:center;font-size:14px}.bar{background:var(--sage);height:12px;border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--green)}
+.bp-output{margin-top:24px}.bp-output:empty{display:none}.bp-output{background:white;border:1px solid var(--line);border-radius:8px;padding:24px}
+textarea{display:block;width:100%;border:1px solid #b7bcae;border-radius:5px;padding:12px;background:var(--cream);margin-top:7px;font:inherit;color:var(--ink)}
+@media(max-width:700px){.bar-row{grid-template-columns:1fr auto}.bar{grid-column:1/-1;order:3}.kick-counter .timer{font-size:60px}}
+@media print{[data-tool="plano-de-parto"] .panel>form,[data-tool="plano-de-parto"] .bp-output .actions{display:none!important}.bp-output{border:0;padding:0}}
+.tool-layout>*{min-width:0}
