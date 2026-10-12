@@ -27,25 +27,29 @@ Envie o conteúdo de `_site` para a hospedagem. Não use esse endereço de exemp
 
 ## O que está incluído
 
-- 21 páginas HTML: início, índice de artigos, índice de ferramentas, 7 artigos, 6 ferramentas, sobre, fontes, privacidade, termos e 404.
-- Calculadoras de parto, idade gestacional e período fértil, 80 nomes, mala com salvamento local e impressão, contador de contrações com exportação CSV.
-- 3 fotografias reais locais e créditos de licença Pexels.
-- Navegação por fase, busca de artigos, menu móvel, estilos de impressão e acessibilidade básica.
-- Títulos e descrições exclusivos, conteúdo já presente no HTML, metadados Open Graph e Article JSON-LD.
-- Automação de sitemap, canonical e breadcrumbs na publicação.
-- Política editorial e transparência sobre apoio de IA e ausência de revisão clínica independente.
+- **Gravidez semana a semana** (estilo BabyCenter): calculadora por DUM ou DPP e 42 páginas, uma por semana, com tamanho do bebê, mudanças no corpo, dicas, exames da fase, FAQ e navegação entre semanas.
+- **12 ferramentas**: gravidez semana a semana, data provável do parto (DUM, concepção, ultrassom, FIV, cronograma de exames e exportação .ics), semanas de gravidez (com meses e trimestre), período fértil (4 ciclos), ganho de peso na gestação (IOM, inclusive gêmeos), contador de contrações (médias da última hora, salvo no aparelho), mala da maternidade, lista de enxoval, calendário de vacinas do SUS com datas, idade do bebê/idade corrigida com marcos, diário de mamadas/fraldas/sono e 227 nomes com significado e favoritos.
+- **17 artigos**, cada um com foto exclusiva (sem repetição: o gerador falha se houver imagem repetida), FAQ, fontes e "Leia também".
+- SEO: títulos e descrições únicos, Open Graph com imagem, JSON-LD (Article, FAQPage, WebApplication, BreadcrumbList, WebSite, Organization), canonical, `sitemap.xml` e `robots.txt` na raiz com o domínio https://amordeberco.com.br/.
 
 ## Atualizar conteúdo
 
-Edite o arquivo HTML do artigo. Atualize fonte, data visível e JSON-LD quando houver revisão real. O índice `artigos.html` e os destaques de `index.html` são HTML: atualize seus cartões se mudar títulos ou endereços. `assets/style.css` controla o visual; `assets/tools.js`, as ferramentas.
+Artigos, semanas, ferramentas, índices e páginas institucionais são gerados a partir de `scripts/data/` e `scripts/site-lib.cjs`. Depois de editar, rode (Node 18+):
 
-Para acrescentar páginas, copie a estrutura de uma página existente, use título e descrição próprios e deixe o comentário `<!-- PUBLICATION_META -->` no head. O preparador descobre automaticamente páginas em `artigos` e `ferramentas` para o sitemap.
+```sh
+node scripts/build-pages.cjs
+node scripts/prepare-publication.cjs https://amordeberco.com.br/
+```
+
+O primeiro comando gera o HTML; o segundo acrescenta canonical, breadcrumbs, `sitemap.xml` e `robots.txt` na raiz e copia tudo para `_site`. `assets/tools.js` contém as ferramentas e `assets/style.css`, o visual.
+
+As fotos dos artigos novos são carregadas do Pexels (licença gratuita, sem cadastro). Se uma foto não carregar, `assets/app.js` troca por uma ilustração local.
 
 ## Google e monetização
 
 Leia `GUIA-SEO-E-MONETIZACAO.md`. O pacote não usa um ID AdSense fictício. Nenhum anúncio, pixel ou Analytics está ativo. Monetizar requer sua conta, sua identificação de publicador e aprovação do Google; o código sozinho não garante aprovação, indexação ou renda.
 
-As seis ferramentas foram escolhidas por recorrência nos portais pesquisados. **Não há comprovação de que sejam as seis mais buscadas.** A metodologia e os links estão em `fontes.html`.
+Ferramentas e temas foram escolhidos por recorrência nos principais portais de maternidade e nas orientações de saúde. **Não há dados oficiais de volume de busca que comprovem um ranking.** A metodologia e os links estão em `fontes.html`.
 
 ## Direitos
 
