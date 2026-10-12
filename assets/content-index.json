@@ -1,7 +1,37 @@
 [
   {
+    "slug": "primeiros-sintomas-gravidez",
+    "title": "Primeiros sintomas de gravidez: sinais comuns e quando fazer o teste",
+    "cat": "Gravidez"
+  },
+  {
     "slug": "pre-natal-primeiros-passos",
     "title": "Pré-natal: por onde começar depois do positivo?",
+    "cat": "Gravidez"
+  },
+  {
+    "slug": "enjoo-na-gravidez",
+    "title": "Enjoo na gravidez: por que acontece e o que pode ajudar",
+    "cat": "Gravidez"
+  },
+  {
+    "slug": "alimentacao-na-gravidez",
+    "title": "Alimentação na gravidez: o que comer, o que evitar e suplementos",
+    "cat": "Gravidez"
+  },
+  {
+    "slug": "exames-pre-natal-por-trimestre",
+    "title": "Exames do pré-natal: lista por trimestre e para que servem",
+    "cat": "Gravidez"
+  },
+  {
+    "slug": "sinais-trabalho-parto",
+    "title": "Contrações e sinais de trabalho de parto: o que observar",
+    "cat": "Gravidez"
+  },
+  {
+    "slug": "parto-normal-ou-cesarea",
+    "title": "Parto normal ou cesárea: diferenças, recuperação e direitos",
     "cat": "Gravidez"
   },
   {
@@ -10,8 +40,8 @@
     "cat": "Bebê"
   },
   {
-    "slug": "introducao-alimentar-seis-meses",
-    "title": "Introdução alimentar: os primeiros passos aos seis meses",
+    "slug": "colica-do-bebe",
+    "title": "Cólica do bebê: como identificar, o que fazer e quando passa",
     "cat": "Bebê"
   },
   {
@@ -20,8 +50,28 @@
     "cat": "Bebê"
   },
   {
-    "slug": "parentalidade-positiva-limites",
-    "title": "Parentalidade positiva: afeto também combina com limites",
+    "slug": "febre-no-bebe",
+    "title": "Febre no bebê: como medir, o que fazer e quando ir ao pronto-socorro",
+    "cat": "Bebê"
+  },
+  {
+    "slug": "calendario-vacinacao-bebe",
+    "title": "Calendário de vacinação do bebê: vacinas do nascimento aos 4 anos",
+    "cat": "Bebê"
+  },
+  {
+    "slug": "introducao-alimentar-seis-meses",
+    "title": "Introdução alimentar: os primeiros passos aos seis meses",
+    "cat": "Bebê"
+  },
+  {
+    "slug": "desenvolvimento-bebe-mes-a-mes",
+    "title": "Desenvolvimento do bebê mês a mês: marcos de 0 a 2 anos",
+    "cat": "Bebê"
+  },
+  {
+    "slug": "depressao-pos-parto",
+    "title": "Depressão pós-parto: sinais, diferença do baby blues e onde buscar ajuda",
     "cat": "Parentalidade"
   },
   {
@@ -30,8 +80,8 @@
     "cat": "Parentalidade"
   },
   {
-    "slug": "sinais-trabalho-parto",
-    "title": "Contrações e sinais de trabalho de parto: o que observar",
-    "cat": "Gravidez"
+    "slug": "parentalidade-positiva-limites",
+    "title": "Parentalidade positiva: afeto também combina com limites",
+    "cat": "Parentalidade"
   }
 ]
