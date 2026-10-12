@@ -28,8 +28,10 @@ Envie o conteúdo de `_site` para a hospedagem. Não use esse endereço de exemp
 ## O que está incluído
 
 - **Gravidez semana a semana** (estilo BabyCenter): calculadora por DUM ou DPP e 42 páginas, uma por semana, com tamanho do bebê, mudanças no corpo, dicas, exames da fase, FAQ e navegação entre semanas.
-- **12 ferramentas**: gravidez semana a semana, data provável do parto (DUM, concepção, ultrassom, FIV, cronograma de exames e exportação .ics), semanas de gravidez (com meses e trimestre), período fértil (4 ciclos), ganho de peso na gestação (IOM, inclusive gêmeos), contador de contrações (médias da última hora, salvo no aparelho), mala da maternidade, lista de enxoval, calendário de vacinas do SUS com datas, idade do bebê/idade corrigida com marcos, diário de mamadas/fraldas/sono e 227 nomes com significado e favoritos.
-- **17 artigos**, cada um com foto exclusiva (sem repetição: o gerador falha se houver imagem repetida), FAQ, fontes e "Leia também".
+- **Bebê mês a mês**: 24 páginas (1 a 24 meses) com desenvolvimento, peso e comprimento medianos da OMS, alimentação, sono, vacinas e consultas, e uma calculadora pela data de nascimento.
+- **22 ferramentas**. Gravidez: semana a semana, data provável do parto (DUM, concepção, ultrassom, FIV, cronograma e .ics), semanas de gravidez, beta hCG (faixas e tempo de duplicação), quando saber o sexo do bebê, período fértil, ganho de peso, contador de movimentos do bebê, contador de contrações, plano de parto imprimível e mala da maternidade. Bebê: enxoval, bebê mês a mês, curva de crescimento da OMS (percentil, gráfico e histórico), calendário de vacinas, idade/idade corrigida, rotina de sono, diário de mamadas e nomes. Família: licença e salário-maternidade, custo do primeiro ano e chá de fraldas.
+- **21 artigos**, cada um com foto exclusiva (sem repetição: o gerador falha se houver imagem repetida), FAQ, fontes e "Leia também".
+- As curvas usam as tabelas LMS oficiais da OMS (`assets/oms-crescimento.js`, amostradas a cada 7 dias de 0 a 5 anos).
 - SEO: títulos e descrições únicos, Open Graph com imagem, JSON-LD (Article, FAQPage, WebApplication, BreadcrumbList, WebSite, Organization), canonical, `sitemap.xml` e `robots.txt` na raiz com o domínio https://amordeberco.com.br/.
 
 ## Atualizar conteúdo

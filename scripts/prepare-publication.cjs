@@ -6,10 +6,10 @@ const root=path.resolve(__dirname,'..');
 const raw=process.env.SITE_URL||process.argv[2]||'https://amordeberco.com.br/';
 let base;try{base=new URL(raw);if(!['https:','http:'].includes(base.protocol)||base.username||base.password||base.search||base.hash)throw Error();base.pathname=base.pathname.replace(/\/$/,'')+'/';}catch(e){console.error('Use uma URL pública válida, sem senha, parâmetros ou fragmentos.');process.exit(1);}
 const xml=s=>s.replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;');
-const GROUPS={artigos:['Artigos','artigos.html'],ferramentas:['Ferramentas','ferramentas.html'],gravidez:['Gravidez semana a semana','ferramentas/gravidez-semana-a-semana.html']};
-const PRIORITY=rel=>rel==='index.html'?'1.0':rel.startsWith('ferramentas/')||rel.startsWith('gravidez/')?'0.9':rel.startsWith('artigos/')||rel==='artigos.html'||rel==='ferramentas.html'?'0.8':'0.4';
+const GROUPS={artigos:['Artigos','artigos.html'],ferramentas:['Ferramentas','ferramentas.html'],gravidez:['Gravidez semana a semana','ferramentas/gravidez-semana-a-semana.html'],bebe:['Bebê mês a mês','ferramentas/bebe-mes-a-mes.html']};
+const PRIORITY=rel=>rel==='index.html'?'1.0':rel.startsWith('ferramentas/')||rel.startsWith('gravidez/')||rel.startsWith('bebe/')?'0.9':rel.startsWith('artigos/')||rel==='artigos.html'||rel==='ferramentas.html'?'0.8':'0.4';
 const today=new Date().toISOString().slice(0,10);
-const sources=fs.readdirSync(root).filter(n=>n.endsWith('.html')).concat(['artigos','ferramentas','gravidez'].flatMap(d=>fs.existsSync(path.join(root,d))?fs.readdirSync(path.join(root,d)).filter(n=>n.endsWith('.html')).map(n=>`${d}/${n}`):[]));
+const sources=fs.readdirSync(root).filter(n=>n.endsWith('.html')).concat(['artigos','ferramentas','gravidez','bebe'].flatMap(d=>fs.existsSync(path.join(root,d))?fs.readdirSync(path.join(root,d)).filter(n=>n.endsWith('.html')).map(n=>`${d}/${n}`):[]));
 const urls=[];
 for(const rel of sources.sort()){
   const file=path.join(root,rel);const url=new URL(rel==='index.html'?'':rel,base).href;let html=fs.readFileSync(file,'utf8');
@@ -27,5 +27,5 @@ for(const rel of sources.sort()){
 fs.writeFileSync(path.join(root,'sitemap.xml'),'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+urls.map(([u,p])=>`  <url><loc>${xml(u)}</loc><lastmod>${today}</lastmod><priority>${p}</priority></url>`).join('\n')+'\n</urlset>\n');
 fs.writeFileSync(path.join(root,'robots.txt'),'User-agent: *\nAllow: /\n\nSitemap: '+new URL('sitemap.xml',base).href+'\n');
 const out=path.join(root,'_site');fs.rmSync(out,{recursive:true,force:true});fs.mkdirSync(out);
-for(const name of fs.readdirSync(root))if(name.endsWith('.html')||['assets','artigos','ferramentas','gravidez','CNAME','.nojekyll','ads.txt','sitemap.xml','robots.txt'].includes(name))fs.cpSync(path.join(root,name),path.join(out,name),{recursive:true});
+for(const name of fs.readdirSync(root))if(name.endsWith('.html')||['assets','artigos','ferramentas','gravidez','bebe','CNAME','.nojekyll','ads.txt','sitemap.xml','robots.txt'].includes(name))fs.cpSync(path.join(root,name),path.join(out,name),{recursive:true});
 console.log(`Publicação preparada: ${urls.length} URLs com canonical, breadcrumbs, sitemap.xml e robots.txt para ${base.href} (raiz e _site).`);

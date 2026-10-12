@@ -5,6 +5,11 @@
     "cat": "Gravidez"
   },
   {
+    "slug": "beta-hcg-resultado",
+    "title": "Beta hCG: como entender o resultado do exame de gravidez",
+    "cat": "Gravidez"
+  },
+  {
     "slug": "pre-natal-primeiros-passos",
     "title": "Pré-natal: por onde começar depois do positivo?",
     "cat": "Gravidez"
@@ -22,6 +27,16 @@
   {
     "slug": "exames-pre-natal-por-trimestre",
     "title": "Exames do pré-natal: lista por trimestre e para que servem",
+    "cat": "Gravidez"
+  },
+  {
+    "slug": "como-saber-sexo-do-bebe",
+    "title": "Como saber o sexo do bebê: sexagem fetal, ultrassom e mitos",
+    "cat": "Gravidez"
+  },
+  {
+    "slug": "movimentos-do-bebe-na-barriga",
+    "title": "Movimentos do bebê na barriga: quando começam e quando se preocupar",
     "cat": "Gravidez"
   },
   {
@@ -72,6 +87,11 @@
   {
     "slug": "depressao-pos-parto",
     "title": "Depressão pós-parto: sinais, diferença do baby blues e onde buscar ajuda",
+    "cat": "Parentalidade"
+  },
+  {
+    "slug": "licenca-maternidade-direitos-gestante",
+    "title": "Licença-maternidade e direitos da gestante: guia prático",
     "cat": "Parentalidade"
   },
   {
