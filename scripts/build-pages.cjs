@@ -5,6 +5,8 @@ const { esc } = L;
 const root = path.resolve(__dirname, '..');
 const write = (rel, html) => { fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true }); fs.writeFileSync(path.join(root, rel), html); };
 const TODAY = '2026-10-12', TODAY_TEXT = '12 de outubro de 2026';
+// Data real da última revisão de conteúdo das semanas (atualize ao editar weeks.cjs ou weeks-detail.cjs).
+const WEEKS_UPDATED = '2026-10-16', WEEKS_UPDATED_TEXT = '16 de outubro de 2026';
 
 // ---------- Artigos ----------
 const legacyExtra = require('./data/articles-legacy-extra.cjs');
@@ -64,17 +66,37 @@ const sizeLine = d => d.len === '—' ? 'Ainda não há medidas: a gestação es
 function weekChips(p, current) {
   return `<nav class="week-chips" aria-label="Todas as semanas">${[1, 2, 3].map(t => `<div><span class="label">${t}º trimestre</span><div>${weeks.filter(d => tri(d.w) === t).map(d => `<a href="${p}gravidez/${weekSlug(d.w)}.html"${d.w === current ? ' aria-current="page"' : ''}>${d.w}</a>`).join('')}</div></div>`).join('')}</nav>`;
 }
+const weekDetail = require('./data/weeks-detail.cjs');
+{ // Conteúdo específico por semana: falha se faltar semana ou se uma frase se repetir entre semanas.
+  const seen = new Map();
+  for (const d of weeks) {
+    const x = weekDetail[d.w];
+    if (!x || !x.dev || !x.sym?.length || !x.exam || !x.ask?.length) throw Error(`weeks-detail.cjs: falta conteúdo da semana ${d.w}`);
+    for (const t of [d.baby, d.mom, ...d.tips, x.dev, ...x.sym, x.exam, ...x.ask]) {
+      if (seen.has(t) && seen.get(t) !== d.w) throw Error(`Texto repetido nas semanas ${seen.get(t)} e ${d.w}: ${t}`);
+      seen.set(t, d.w);
+    }
+  }
+}
+const WEEK_SOURCES = [['Ministério da Saúde — Saúde materna', 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/s/saude-da-mulher/saude-materna'], ['OMS — Recomendações sobre cuidados pré-natais para uma experiência positiva na gravidez (2016)', 'https://www.who.int/publications/i/item/9789241549912'], ['NHS — Your pregnancy week by week', 'https://www.nhs.uk/pregnancy/week-by-week/'], ['NHS — Your antenatal appointments', 'https://www.nhs.uk/pregnancy/your-pregnancy-care/your-antenatal-appointments/']];
+const weekSources = w => [...WEEK_SOURCES,
+  ...(w >= 29 && w <= 31 ? [['CLT — Decreto-Lei 5.452/1943 (art. 392, licença-maternidade)', 'https://www.planalto.gov.br/ccivil_03/decreto-lei/del5452.htm']] : []),
+  ...(w >= 26 && w <= 33 ? [['Lei 11.108/2005 — direito a acompanhante no parto', 'https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2005/lei/l11108.htm'], ['Lei 11.634/2007 — vinculação da gestante à maternidade', 'https://www.planalto.gov.br/ccivil_03/_ato2007-2010/2007/lei/l11634.htm']] : []),
+  ...(w >= 37 && w <= 39 ? [['Conselho Federal de Medicina — Resolução CFM nº 2.144/2016 (cesárea a pedido)', 'https://portal.cfm.org.br/']] : []),
+  ...(w >= 36 ? [['OMS — Recomendações sobre cuidados intraparto para uma experiência positiva de parto (2018)', 'https://www.who.int/publications/i/item/9789241550215'], ['NHS — Signs that labour has begun', 'https://www.nhs.uk/pregnancy/labour-and-birth/signs-that-labour-has-begun/']] : []),
+  ...(w >= 16 ? [['NHS — Your baby\'s movements', 'https://www.nhs.uk/pregnancy/keeping-well/your-babys-movements/']] : [])];
 for (const d of weeks) {
-  const p = '../', w = d.w;
+  const p = '../', w = d.w, x = weekDetail[w];
   const title = `${weekLabel(w)} de gravidez: desenvolvimento do bebê, sintomas e dicas`;
-  const desc = `${weekLabel(w)} de gravidez (${month(w)}º mês, ${tri(w)}º trimestre): ${d.len === '—' ? 'o que acontece no corpo' : `bebê do tamanho de ${d.fruit}`}, mudanças no corpo, exames e dicas para esta fase.`;
+  const desc = `${weekLabel(w)} de gravidez (${month(w)}º mês, ${tri(w)}º trimestre): ${d.len === '—' ? 'o que acontece no corpo' : `bebê do tamanho de ${d.fruit}`}, sintomas, exames da fase e o que perguntar na consulta.`;
   const faq = [[`${weekLabel(w)} de gravidez são quantos meses?`, `Com ${weekLabel(w)}, a gestação está aproximadamente no ${month(w)}º mês, no ${tri(w)}º trimestre.`]];
   if (d.len !== '—') faq.push([`Qual o tamanho do bebê com ${weekLabel(w)}?`, `Em média, cerca de ${d.len}${d.wt !== '—' ? ` e ${d.wt}` : ''}, o tamanho de ${d.fruit}. Os valores variam de bebê para bebê.`]);
+  faq.push([`Quais sintomas são comuns com ${weekLabel(w)} de gravidez?`, x.sym.join(' ')]);
   const ex = exams(w);
-  const prev = w > 1 ? `<a href="${weekSlug(w - 1)}.html" rel="prev">← ${weekLabel(w - 1)}</a>` : '<span></span>';
-  const next = w < 42 ? `<a href="${weekSlug(w + 1)}.html" rel="next">${weekLabel(w + 1)} →</a>` : '<span></span>';
-  const schema = [{ '@context': 'https://schema.org', '@type': 'Article', headline: title, description: desc, datePublished: TODAY, dateModified: TODAY, inLanguage: 'pt-BR', mainEntityOfPage: `${L.SITE}gravidez/${weekSlug(w)}.html`, author: { '@type': 'Organization', name: 'Amor de Berço' }, publisher: { '@type': 'Organization', name: 'Amor de Berço' } }, ...L.faqSchema(faq)];
-  const main = `<div class="wrap"><div class="crumb"><a href="../index.html">Início</a> / <a href="../ferramentas/gravidez-semana-a-semana.html">Gravidez semana a semana</a> / ${weekLabel(w)}</div><article class="reading"><div class="eyebrow">${tri(w)}º TRIMESTRE · ${month(w)}º MÊS</div><h1>${weekLabel(w)} de gravidez</h1><p class="lead">${esc(d.baby.split('. ')[0])}.</p><div class="size-card"><span class="size-emoji" aria-hidden="true">${d.emoji}</span><div><span class="label">Tamanho aproximado do bebê</span><strong>${esc(d.fruit)}</strong><p>${d.len !== '—' ? `Comprimento: ${d.len} · Peso: ${d.wt}` : 'Ainda sem medidas'}</p></div></div><div class="week-progress"><progress max="40" value="${Math.min(w, 40)}" aria-label="Progresso da gestação">${w} de 40</progress><span>${w >= 40 ? 'Data provável do parto alcançada' : `${40 - w} semanas para a data provável do parto`}</span></div><h2>Desenvolvimento do bebê</h2><p>${esc(d.baby)}</p><h2>No seu corpo</h2><p>${esc(d.mom)}</p><h2>Dicas para esta semana</h2><ul>${d.tips.map(t => `<li>${esc(t)}</li>`).join('')}</ul>${ex.length ? `<h2>Exames e consultas nesta fase</h2><ul>${ex.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}<div class="notice">Medidas são médias aproximadas e cada bebê cresce no próprio ritmo. Procure atendimento em caso de sangramento, perda de líquido, dor forte, febre, dor de cabeça intensa com visão turva ou redução dos movimentos do bebê.</div><nav class="week-nav" aria-label="Semanas vizinhas">${prev}${next}</nav><a class="cta-box" href="../ferramentas/gravidez-semana-a-semana.html"><span class="label">CALCULADORA GRATUITA</span><strong>Descubra em que semana você está ↗</strong></a>${L.faqHtml(faq)}<h2>Todas as semanas</h2>${weekChips('../', w)}${L.sourcesHtml([['NHS — Your pregnancy week by week', 'https://www.nhs.uk/pregnancy/week-by-week/'], ['Ministério da Saúde — Saúde materna', 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/s/saude-da-mulher/saude-materna']], TODAY_TEXT)}</article></div>`;
+  const prev = w > 1 ? `<a href="${weekSlug(w - 1)}.html" rel="prev">← Semana anterior: ${weekLabel(w - 1)}</a>` : '<span></span>';
+  const next = w < 42 ? `<a href="${weekSlug(w + 1)}.html" rel="next">Próxima semana: ${weekLabel(w + 1)} →</a>` : '<span></span>';
+  const schema = [{ '@context': 'https://schema.org', '@type': 'Article', headline: title, description: desc, datePublished: TODAY, dateModified: WEEKS_UPDATED, inLanguage: 'pt-BR', mainEntityOfPage: `${L.SITE}gravidez/${weekSlug(w)}.html`, author: { '@type': 'Organization', name: 'Equipe editorial Amor de Berço', url: `${L.SITE}sobre.html` }, publisher: { '@type': 'Organization', name: 'Amor de Berço' }, citation: weekSources(w).map(([, u]) => u) }, ...L.faqSchema(faq)];
+  const main = `<div class="wrap"><div class="crumb"><a href="../index.html">Início</a> / <a href="../ferramentas/gravidez-semana-a-semana.html">Gravidez semana a semana</a> / ${weekLabel(w)}</div><article class="reading"><div class="eyebrow">${tri(w)}º TRIMESTRE · ${month(w)}º MÊS</div><h1>${weekLabel(w)} de gravidez</h1><p class="lead">${esc(d.baby.split('. ')[0])}.</p>${L.byline(WEEKS_UPDATED, p)}<div class="size-card"><span class="size-emoji" aria-hidden="true">${d.emoji}</span><div><span class="label">Tamanho aproximado do bebê</span><strong>${esc(d.fruit)}</strong><p>${d.len !== '—' ? `Comprimento: ${d.len} · Peso: ${d.wt}` : 'Ainda sem medidas'}</p></div></div><div class="week-progress"><progress max="40" value="${Math.min(w, 40)}" aria-label="Progresso da gestação">${w} de 40</progress><span>${w >= 40 ? 'Data provável do parto alcançada' : `${40 - w} semanas para a data provável do parto`}</span></div><h2>Desenvolvimento do bebê com ${weekLabel(w)}</h2><p>${esc(d.baby)}</p><p>${esc(x.dev)}</p><h2>No seu corpo</h2><p>${esc(d.mom)}</p><h3>Sintomas comuns nesta semana</h3><ul>${x.sym.map(t => `<li>${esc(t)}</li>`).join('')}</ul><h2>Exames e consultas com ${weekLabel(w)}</h2><p>${esc(x.exam)}</p>${ex.length ? `<ul>${ex.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}<h2>O que perguntar na consulta</h2><ul>${x.ask.map(t => `<li>${esc(t)}</li>`).join('')}</ul><h2>Dicas para esta semana</h2><ul>${d.tips.map(t => `<li>${esc(t)}</li>`).join('')}</ul><div class="notice">Medidas são médias aproximadas e cada bebê cresce no próprio ritmo. Procure atendimento em caso de sangramento, perda de líquido, dor forte, febre, dor de cabeça intensa com visão turva ou redução dos movimentos do bebê.</div><nav class="week-nav" aria-label="Semanas vizinhas">${prev}${next}</nav><a class="cta-box" href="../ferramentas/gravidez-semana-a-semana.html"><span class="label">CALCULADORA GRATUITA</span><strong>Descubra em que semana você está ↗</strong></a>${L.faqHtml(faq)}<h2>Todas as semanas</h2><p><a href="../ferramentas/gravidez-semana-a-semana.html">Ver o guia completo da gravidez semana a semana</a></p>${weekChips('../', w)}${L.reviewNotice()}${L.sourcesHtml(weekSources(w), WEEKS_UPDATED_TEXT)}</article></div>`;
   write(`gravidez/${weekSlug(w)}.html`, L.page({ title: `${title} | Amor de Berço`, description: desc, p, type: 'article', schema }, main));
 }
 write('assets/weeks-data.js', '// Gerado por scripts/build-pages.cjs a partir de scripts/data/weeks.cjs\nwindow.WEEKS=' + JSON.stringify(weeks.map(d => ({ w: d.w, f: d.fruit, e: d.emoji, l: d.len, p: d.wt, b: d.baby, m: d.mom, s: weekSlug(d.w) }))) + ';\n');

@@ -42,4 +42,17 @@ function sourcesHtml(sources, consulted) {
 }
 const dateBR = iso => iso.split('-').reverse().join('/');
 
-module.exports = { SITE, VERSION, esc, ld, pexels, imgSrc, imgAbs, imgPage, imgTag, head, header, footer, page, faqHtml, faqSchema, sourcesHtml, dateBR };
+// Autoria e revisão exibidas nas páginas de saúde. Preencha REVIEWER somente com uma revisão real,
+// por profissional que autorizou o uso do nome e do registro (ex.: { name: 'Nome', credential: 'Médica obstetra', registry: 'CRM-UF 00000', url: 'https://...' }).
+// Enquanto for null, as páginas informam com transparência que não houve revisão clínica independente.
+const AUTHOR = 'Equipe editorial Amor de Berço';
+const REVIEWER = null;
+function byline(updated, p) {
+  const rev = REVIEWER ? ` · Revisado por ${REVIEWER.url ? `<a href="${esc(REVIEWER.url)}" rel="noopener">${esc(REVIEWER.name)}</a>` : esc(REVIEWER.name)}, ${esc(REVIEWER.credential)} (${esc(REVIEWER.registry)})` : '';
+  return `<p class="meta">Por <a href="${p}sobre.html">${AUTHOR}</a>${rev} · Atualizado em <time datetime="${updated}">${dateBR(updated)}</time></p>`;
+}
+function reviewNotice() {
+  return REVIEWER ? `<div class="notice">Conteúdo educativo revisado por ${esc(REVIEWER.name)}, ${esc(REVIEWER.credential)}. Não substitui o atendimento de saúde. Em emergência, ligue 192.</div>` : '<div class="notice">Conteúdo educativo, elaborado com apoio de IA a partir das fontes indicadas. Não passou por revisão clínica independente e não substitui o atendimento de saúde. Em emergência, ligue 192.</div>';
+}
+
+module.exports = { SITE, VERSION, esc, ld, pexels, imgSrc, imgAbs, imgPage, imgTag, head, header, footer, page, faqHtml, faqSchema, sourcesHtml, dateBR, AUTHOR, REVIEWER, byline, reviewNotice };
