@@ -34,6 +34,16 @@ Envie o conteúdo de `_site` para a hospedagem. Não use esse endereço de exemp
 - As curvas usam as tabelas LMS oficiais da OMS (`assets/oms-crescimento.js`, amostradas a cada 7 dias de 0 a 5 anos).
 - SEO: títulos e descrições únicos, Open Graph com imagem, JSON-LD (Article, FAQPage, WebApplication, BreadcrumbList, WebSite, Organization), canonical, `sitemap.xml` e `robots.txt` na raiz com o domínio https://amordeberco.com.br/.
 
+## Redirecionamentos (host único)
+
+O endereço canônico é `https://amordeberco.com.br/`. O arquivo `.htaccess` (copiado para `_site` pelo `prepare-publication.cjs`) faz 301 em um único salto:
+
+- `http://` → `https://`
+- `www.amordeberco.com.br` → `amordeberco.com.br`
+- `/index.html` → `/` (e `/pasta/index.html` → `/pasta/`), mantendo parâmetros como `?utm=`
+
+Funciona em Apache e LiteSpeed (Hostinger e cPanel em geral). Se o HTTPS terminar em um proxy/CDN, o cabeçalho `X-Forwarded-Proto` evita laço. Em outra hospedagem o `.htaccess` é ignorado e a regra equivalente precisa ser criada lá: `_redirects` no Netlify/Cloudflare Pages, `redirects` no `vercel.json`, ou, no GitHub Pages, "Enforce HTTPS" com o domínio sem www (o Pages não redireciona `/index.html`; nesse caso o canonical resolve). Confira com `curl -I http://www.amordeberco.com.br/index.html`: deve vir um único `301` com `Location: https://amordeberco.com.br/`.
+
 ## Atualizar conteúdo
 
 Artigos, semanas, ferramentas, índices e páginas institucionais são gerados a partir de `scripts/data/` e `scripts/site-lib.cjs`. Depois de editar, rode (Node 18+):
