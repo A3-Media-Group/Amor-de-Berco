@@ -1,0 +1,26 @@
+# Amor de Berço — host único e URLs canônicas (Apache / LiteSpeed, ex.: Hostinger).
+# Canônico: https://amordeberco.com.br/ — todo redirecionamento vai direto ao destino final (um salto, 301).
+# Em outra hospedagem (Netlify, Vercel, Cloudflare Pages, GitHub Pages), este arquivo é ignorado:
+# veja a seção "Redirecionamentos" do README.
+
+Options -Indexes
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# 1) /index.html e /pasta/index.html -> / e /pasta/ (usa a requisição original, para não conflitar com o DirectoryIndex).
+RewriteCond %{THE_REQUEST} \s/+((?:[^\s?]*/)?)index\.html[\s?] [NC]
+RewriteRule ^ https://amordeberco.com.br/%1 [R=301,L,NE]
+
+# 2) www -> sem www, já em https.
+RewriteCond %{HTTP_HOST} ^www\.amordeberco\.com\.br$ [NC]
+RewriteRule ^(.*)$ https://amordeberco.com.br/$1 [R=301,L,NE]
+
+# 3) http -> https. X-Forwarded-Proto evita laço quando há proxy/CDN terminando o TLS.
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+RewriteCond %{HTTP_HOST} ^amordeberco\.com\.br$ [NC]
+RewriteRule ^(.*)$ https://amordeberco.com.br/$1 [R=301,L,NE]
+</IfModule>

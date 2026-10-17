@@ -42,5 +42,5 @@ fs.writeFileSync(path.join(root,'sitemap.xml'),'<?xml version="1.0" encoding="UT
 fs.writeFileSync(lastmodFile,JSON.stringify(Object.fromEntries(Object.entries(lastmod).sort()),null,1)+'\n');
 fs.writeFileSync(path.join(root,'robots.txt'),'User-agent: *\nAllow: /\n\nSitemap: '+new URL('sitemap.xml',base).href+'\n');
 const out=path.join(root,'_site');fs.rmSync(out,{recursive:true,force:true});fs.mkdirSync(out);
-for(const name of fs.readdirSync(root))if(name.endsWith('.html')||['assets','artigos','ferramentas','gravidez','bebe','CNAME','.nojekyll','ads.txt','sitemap.xml','robots.txt'].includes(name))fs.cpSync(path.join(root,name),path.join(out,name),{recursive:true});
+for(const name of fs.readdirSync(root))if(name.endsWith('.html')||['assets','artigos','ferramentas','gravidez','bebe','CNAME','.nojekyll','.htaccess','ads.txt','sitemap.xml','robots.txt'].includes(name))fs.cpSync(path.join(root,name),path.join(out,name),{recursive:true});
 console.log(`Publicação preparada: ${urls.length} URLs com canonical, breadcrumbs, sitemap.xml e robots.txt para ${base.href} (raiz e _site).`);
