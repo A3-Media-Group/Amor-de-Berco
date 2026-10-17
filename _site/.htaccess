@@ -7,8 +7,26 @@ Options -Indexes
 DirectoryIndex index.html
 ErrorDocument 404 /404.html
 
+# Arquivos ocultos (.git, .env, .htaccess...) nunca são servidos, mesmo sem mod_rewrite.
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+
 <IfModule mod_rewrite.c>
 RewriteEngine On
+
+# Requisições internas (página de erro, DirectoryIndex) já passaram pelas regras abaixo: não reprocessar.
+RewriteCond %{ENV:REDIRECT_STATUS} .
+RewriteRule ^ - [L]
+
+# 0) Bloqueio (404) antes de qualquer redirecionamento: caminhos ocultos, exceto /.well-known/
+#    (validação de SSL e afins), e arquivos de desenvolvimento caso a raiz do repositório seja publicada.
+RewriteRule (^|/)\.(?!well-known(/|$)) - [R=404,L]
+RewriteCond %{REQUEST_URI} ^/(scripts|_site|node_modules)(/|$) [NC]
+RewriteRule ^ - [R=404,L]
+RewriteRule \.(md|cjs|mjs|ts|sh|log|bak|old|orig|swp|sql|ini|env|ya?ml|lock)$ - [R=404,NC,L]
+RewriteCond %{REQUEST_URI} ^/(package(-lock)?\.json|integracao-adsense-exemplo\.txt|chart\.png)$ [NC]
+RewriteRule ^ - [R=404,L]
 
 # 1) /index.html e /pasta/index.html -> / e /pasta/ (usa a requisição original, para não conflitar com o DirectoryIndex).
 RewriteCond %{THE_REQUEST} \s/+((?:[^\s?]*/)?)index\.html[\s?] [NC]
